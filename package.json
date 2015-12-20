@@ -1,0 +1,22 @@
+{
+  "name": "reef-client",
+  "version": "0.0.0",
+  "description": "A nodejs client for the Reef arquitectural pattern",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test/*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/line64/node-reef-client.git"
+  },
+  "keywords": [
+    "reef"
+  ],
+  "author": "Line64",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/line64/node-reef-client/issues"
+  },
+  "homepage": "https://github.com/line64/node-reef-client#readme"
+}
