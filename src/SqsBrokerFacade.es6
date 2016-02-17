@@ -108,11 +108,7 @@ export default class SqsBrokerFacade {
       let message = {
         id: request.uid,
         body: JSON.stringify(request.payload),
-        messageAttributes: {
-          reefDialect: { DataType: 'String', StringValue: request.reefDialect },
-          requestUid: { DataType: 'String', StringValue: request.uid },
-          queryType: { DataType: 'String', StringValue: request.queryType }
-        }
+        messageAttributes: this._buildSQSMessageAttributes(request)
       };
 
       this._requestProducer.send([message], function(err) {
@@ -122,6 +118,32 @@ export default class SqsBrokerFacade {
 
     });
 
+  }
+
+  _buildSQSMessageAttributes (request) {
+    let messageAttributes;
+    switch (request.reefDialect) {
+        case 'reef-v1-query':
+          messageAttributes = {
+              reefDialect: { DataType: 'String', StringValue: request.reefDialect },
+              requestUid: { DataType: 'String', StringValue: request.uid },
+              queryType: { DataType: 'String', StringValue: request.queryType }
+          }
+          break;
+
+        case 'reef-v1-command':
+          messageAttributes = {
+              reefDialect: { DataType: 'String', StringValue: request.reefDialect },
+              requestUid: { DataType: 'String', StringValue: request.uid },
+              commandType: { DataType: 'String', StringValue: request.commandType }
+          }
+          break;
+
+        default: 
+          console.error("Unrecognized reefDialect");
+          return;
+    }
+    return messageAttributes;
   }
 
   expectResponse(uid, timeout) {
