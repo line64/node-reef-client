@@ -2,6 +2,8 @@ var ReefClient = require('../dist').ReefClient;
 var SqsBrokerFacade = require('../dist').SqsBrokerFacade;
 var async = require('async');
 
+require('dotenv').load();
+
 function runOneQuery(n, next) {
 
   console.log('submitting request '+n);
@@ -22,9 +24,9 @@ function runOneQuery(n, next) {
 }
 
 var brokerFacade = new SqsBrokerFacade({
-  region: 'sa-east-1',
-  accessKeyId: 'AKIAIZ4ONXIKT5EUBQDA',
-  secretAccessKey: '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',
+  region: process.env.AWS_REGION,
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   serviceDomain: 'service-mock',
   serviceLane: 'shared',
   clientDomain: 'stress-tester',

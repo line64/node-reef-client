@@ -216,11 +216,7 @@ var SqsBrokerFacade = (function () {
         var message = {
           id: request.uid,
           body: (0, _stringify2.default)(request.payload),
-          messageAttributes: {
-            reefDialect: { DataType: 'String', StringValue: request.reefDialect },
-            requestUid: { DataType: 'String', StringValue: request.uid },
-            queryType: { DataType: 'String', StringValue: request.queryType }
-          }
+          messageAttributes: _this3._buildSQSMessageAttributes(request)
         };
 
         _this3._requestProducer.send([message], function (err) {
@@ -228,6 +224,33 @@ var SqsBrokerFacade = (function () {
           resolve();
         });
       });
+    }
+  }, {
+    key: '_buildSQSMessageAttributes',
+    value: function _buildSQSMessageAttributes(request) {
+      var messageAttributes = undefined;
+      switch (request.reefDialect) {
+        case 'reef-v1-query':
+          messageAttributes = {
+            reefDialect: { DataType: 'String', StringValue: request.reefDialect },
+            requestUid: { DataType: 'String', StringValue: request.uid },
+            queryType: { DataType: 'String', StringValue: request.queryType }
+          };
+          break;
+
+        case 'reef-v1-command':
+          messageAttributes = {
+            reefDialect: { DataType: 'String', StringValue: request.reefDialect },
+            requestUid: { DataType: 'String', StringValue: request.uid },
+            commandType: { DataType: 'String', StringValue: request.commandType }
+          };
+          break;
+
+        default:
+          console.error("Unrecognized reefDialect");
+          return;
+      }
+      return messageAttributes;
     }
   }, {
     key: 'expectResponse',
