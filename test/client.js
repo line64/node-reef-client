@@ -19,6 +19,7 @@ function runOneQuery(n, next) {
     })
     .catch(function (err) {
       console.log('error on query pipeline '+n);
+      console.error(err);
     });
 
 }
@@ -29,7 +30,7 @@ var brokerFacade = new SqsBrokerFacade({
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   serviceDomain: 'service-mock',
   serviceLane: 'shared',
-  clientDomain: 'stress-tester',
+  clientDomain: 'client-test',
   clientLane: 'instance001'
 });
 
@@ -44,6 +45,6 @@ echoClient
   })
   .then(function () {
 
-    async.times(1000, runOneQuery);
+    async.times(200, runOneQuery);
 
   })

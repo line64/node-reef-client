@@ -44,6 +44,10 @@ var _sqsProducer = require('sqs-producer');
 
 var _sqsProducer2 = _interopRequireDefault(_sqsProducer);
 
+var _listenercount = require('listenercount');
+
+var _listenercount2 = _interopRequireDefault(_listenercount);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var SqsBrokerFacade = (function () {
@@ -118,6 +122,13 @@ var SqsBrokerFacade = (function () {
         payload: JSON.parse(message.Body),
         acknowledge: done
       };
+
+      console.log('response message received');
+
+      if (!(0, _listenercount2.default)(this._responseEmitter, response.requestUid)) {
+        done(new Error('No handler for the response'));
+        console.log('Response for request uid ' + response.requestUid + ' died silently');
+      }
 
       this._responseEmitter.emit(response.requestUid, response);
     }

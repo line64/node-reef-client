@@ -2,6 +2,7 @@ import Emitter from 'events';
 import AWS from 'aws-sdk';
 import Consumer from 'sqs-consumer';
 import Producer from 'sqs-producer';
+import listenerCount from 'listenercount';
 
 export default class SqsBrokerFacade {
 
@@ -56,6 +57,13 @@ export default class SqsBrokerFacade {
       payload: JSON.parse(message.Body),
       acknowledge: done
     };
+
+    console.log('response message received');
+
+    if (!listenerCount(this._responseEmitter, response.requestUid)) {
+      done(new Error('No handler for the response'));
+      console.log(`Response for request uid ${response.requestUid} died silently`);
+    }
 
     this._responseEmitter.emit(response.requestUid, response);
 
@@ -139,7 +147,7 @@ export default class SqsBrokerFacade {
           }
           break;
 
-        default: 
+        default:
           console.error("Unrecognized reefDialect");
           return;
     }
