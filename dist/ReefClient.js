@@ -55,7 +55,7 @@ var ReefClient = (function () {
     key: 'query',
     value: (function () {
       var ref = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee(type, params) {
-        var requestUid, request, response;
+        var requestUid, request, responsePromise, response;
         return _regenerator2.default.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
@@ -67,21 +67,22 @@ var ReefClient = (function () {
                   payload: params,
                   uid: requestUid
                 };
-                _context.next = 4;
+                responsePromise = this._brokerFacade.expectResponse(requestUid, 30000);
+                _context.next = 5;
                 return this._brokerFacade.enqueueRequest(request);
 
-              case 4:
-                _context.next = 6;
-                return this._brokerFacade.expectResponse(requestUid, 30000);
+              case 5:
+                _context.next = 7;
+                return responsePromise;
 
-              case 6:
+              case 7:
                 response = _context.sent;
 
                 response.acknowledge();
 
                 return _context.abrupt('return', response.payload);
 
-              case 9:
+              case 10:
               case 'end':
                 return _context.stop();
             }

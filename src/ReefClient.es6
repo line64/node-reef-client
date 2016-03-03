@@ -37,9 +37,11 @@ export default class ReefClient {
       uid: requestUid
     };
 
+    let responsePromise = this._brokerFacade.expectResponse(requestUid, 30000);
+
     await this._brokerFacade.enqueueRequest(request);
 
-    let response = await this._brokerFacade.expectResponse(requestUid, 30000);
+    let response = await responsePromise;
 
     response.acknowledge();
 
