@@ -1,8 +1,6 @@
-import Emitter from 'events';
 import AWS from 'aws-sdk';
 import Consumer from 'sqs-consumer';
 import Producer from 'sqs-producer';
-import listenerCount from 'listenercount';
 
 export default class SqsBrokerFacade {
 
@@ -16,7 +14,7 @@ export default class SqsBrokerFacade {
       secretAccessKey: options.secretAccessKey
     });
 
-    this._responseEmitter = new Emitter();
+    this._listeners = {};
 
   }
 
@@ -59,15 +57,16 @@ export default class SqsBrokerFacade {
     };
 
     console.log('response message received');
-
-    if (!listenerCount(this._responseEmitter, response.requestUid)) {
-      done(new Error('No handler for the response'));
-      console.log(`Response for request uid ${response.requestUid} died silently`);
+    
+    if(this._listeners[response.requestUid]) {
+        this._listeners[response.requestUid](response);
+        delete this._listeners[response.requestUid];
+    } else {
+        done(new Error('No handler for the response'));
+        console.log(`Response for request uid ${response.requestUid} died silently`);            
     }
-
-    this._responseEmitter.emit(response.requestUid, response);
-
   }
+  
 
   async _setupResponseConsumer(domain, lane) {
 
@@ -78,7 +77,7 @@ export default class SqsBrokerFacade {
       queueUrl: queueUrl,
       batchSize: 10,
       messageAttributeNames: ['All'],
-      handleMessage: (message, done) => { this._processResponseMessage(message, done); }
+      handleMessage: (message, done) => this._processResponseMessage(message, done)
     });
 
     consumer.on('error', function (err) {
@@ -158,14 +157,12 @@ export default class SqsBrokerFacade {
 
     return new Promise((resolve, reject) => {
 
-      this._responseEmitter.once(uid, (data) => {
-
-        resolve(data);
-
-      });
-
-      setTimeout(() => reject(new Error('Response timeout')), timeout);
-
+      this._listeners[String(uid)] = resolve;
+      
+      setTimeout(() => {
+          if (this._listeners[String(uid)]) reject(new Error('Response timeout'));
+      }, timeout);
+        
     });
 
   }
