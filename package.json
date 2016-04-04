@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "compile": "babel -d ./dist ./src",
+    "prepublish": "npm run compile",
     "test2": "npm run compile && node test/client.js",
     "test": "mocha test/*"
   },
