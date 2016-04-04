@@ -37,7 +37,7 @@ export default class ReefClient {
       uid: requestUid
     };
 
-    let responsePromise = this._brokerFacade.expectResponse(requestUid, 30000);
+    let responsePromise = this._brokerFacade.expectResponse(requestUid, 30*1000);
 
     await this._brokerFacade.enqueueRequest(request);
 
@@ -49,29 +49,26 @@ export default class ReefClient {
 
   }
 
-  execute(type, params) {
-  
-    return new Promise((resolve, reject) => {
-          
-        let requestUid = uid();
+  async execute(type, params) {
 
-        let request = {
-        reefDialect: 'reef-v1-command',
-        commandType: type,
-        payload: params,
-        uid: requestUid
-        };
+    let requestUid = uid();
 
-        this._brokerFacade.expectResponse(requestUid, 5000).then((response) => {
-            
-            response.acknowledge();
-                
-            resolve(response.payload);
-        
-        });
-   
-        this._brokerFacade.enqueueRequest(request);
-    });    
+    let request = {
+      reefDialect: 'reef-v1-command',
+      commandType: type,
+      payload: params,
+      uid: requestUid
+    };
+
+    let responsePromise = this._brokerFacade.expectResponse(requestUid, 30*1000);
+
+    await this._brokerFacade.enqueueRequest(request);
+
+    let response = await responsePromise;
+
+    response.acknowledge();
+
+    return response.payload;
 
   }
 
