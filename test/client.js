@@ -6,7 +6,7 @@ require('dotenv').load();
 
 function runOneQuery(n, next) {
 
-  console.log('submitting request '+n);
+  console.log('submitting query request '+n);
 
   echoClient
     .query('echo-data', {
@@ -19,6 +19,26 @@ function runOneQuery(n, next) {
     })
     .catch(function (err) {
       console.log('error on query pipeline '+n);
+      console.error(err);
+    });
+
+}
+
+function runOneCommand(n, next) {
+
+  console.log('submitting command request '+n);
+
+  echoClient
+    .execute('receive-data', {
+      sleep: 5,
+      data: "hello reefter"
+    })
+    .then(function (data) {
+      console.log('receipt recived for '+n);
+      next();
+    })
+    .catch(function (err) {
+      console.log('error on command pipeline '+n);
       console.error(err);
     });
 
@@ -45,6 +65,11 @@ echoClient
   })
   .then(function () {
 
-    async.times(200, runOneQuery);
+    async.times(20, runOneQuery);
 
   })
+  .then(function () {
+
+    async.times(20, runOneCommand);
+
+  });
