@@ -1,6 +1,6 @@
 {
   "name": "reef-client",
-  "version": "0.0.6",
+  "version": "1.0.0-beta.1",
   "description": "A nodejs client for the Reef arquitectural pattern",
   "main": "dist/index.js",
   "scripts": {
