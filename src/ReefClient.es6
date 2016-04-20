@@ -26,12 +26,14 @@ export default class ReefClient {
 
   }
 
-  async query(type, params) {
+  async query(domain, lane, type, params) {
 
     let requestUid = uid();
 
     let request = {
       reefDialect: 'reef-v1-query',
+      domain: domain,
+      lane: lane,
       queryType: type,
       payload: params,
       uid: requestUid
@@ -49,12 +51,14 @@ export default class ReefClient {
 
   }
 
-  async execute(type, params) {
+  async execute(domain, lane, type, params) {
 
     let requestUid = uid();
 
     let request = {
       reefDialect: 'reef-v1-command',
+      domain: domain,
+      lane: lane,
       commandType: type,
       payload: params,
       uid: requestUid

@@ -9,7 +9,7 @@ function runOneQuery(n, next) {
   console.log('submitting query request '+n);
 
   echoClient
-    .query('echo-data', {
+    .query('service-mock', 'shared', 'echo-data', {
       sleep: 5,
       data: "hello reefter"
     })
@@ -29,7 +29,7 @@ function runOneCommand(n, next) {
   console.log('submitting command request '+n);
 
   echoClient
-    .execute('receive-data', {
+    .execute('service-mock', 'shared', 'receive-data', {
       sleep: 5,
       data: "hello reefter"
     })
@@ -48,8 +48,6 @@ var brokerFacade = new SqsBrokerFacade({
   region: process.env.AWS_REGION,
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  serviceDomain: 'service-mock',
-  serviceLane: 'shared',
   clientDomain: 'client-test',
   clientLane: 'instance001'
 });

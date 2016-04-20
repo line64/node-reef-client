@@ -57,16 +57,16 @@ export default class SqsBrokerFacade {
     };
 
     console.log('response message received');
-    
+
     if(this._listeners[response.requestUid]) {
         this._listeners[response.requestUid](response);
         delete this._listeners[response.requestUid];
     } else {
         done(new Error('No handler for the response'));
-        console.log(`Response for request uid ${response.requestUid} died silently`);            
+        console.log(`Response for request uid ${response.requestUid} died silently`);
     }
   }
-  
+
 
   async _setupResponseConsumer(domain, lane) {
 
@@ -90,8 +90,6 @@ export default class SqsBrokerFacade {
 
   async setup() {
 
-    this._requestProducer = await this._setupRequestProducer(this._options.serviceDomain, this._options.serviceLane);
-
     this._responseConsumer = await this._setupResponseConsumer(this._options.clientDomain, this._options.clientLane);
 
   }
@@ -108,17 +106,19 @@ export default class SqsBrokerFacade {
 
   }
 
-  enqueueRequest(request) {
+  async enqueueRequest(request) {
+
+    let message = {
+      id: request.uid,
+      body: JSON.stringify(request.payload),
+      messageAttributes: this._buildSQSMessageAttributes(request)
+    };
+
+    let requestProducer = await this._setupRequestProducer(request.domain, request.lane);
 
     return new Promise((resolve, reject) => {
 
-      let message = {
-        id: request.uid,
-        body: JSON.stringify(request.payload),
-        messageAttributes: this._buildSQSMessageAttributes(request)
-      };
-
-      this._requestProducer.send([message], function(err) {
+      requestProducer.send([message], function(err) {
         if (err) reject(err);
         resolve();
       });
@@ -134,7 +134,9 @@ export default class SqsBrokerFacade {
           messageAttributes = {
               reefDialect: { DataType: 'String', StringValue: request.reefDialect },
               requestUid: { DataType: 'String', StringValue: request.uid },
-              queryType: { DataType: 'String', StringValue: request.queryType }
+              queryType: { DataType: 'String', StringValue: request.queryType },
+              replyToDomain: { DataType: 'String', StringValue: this._options.clientDomain },
+              replyToLane: { DataType: 'String', StringValue: this._options.clientLane }
           }
           break;
 
@@ -142,7 +144,9 @@ export default class SqsBrokerFacade {
           messageAttributes = {
               reefDialect: { DataType: 'String', StringValue: request.reefDialect },
               requestUid: { DataType: 'String', StringValue: request.uid },
-              commandType: { DataType: 'String', StringValue: request.commandType }
+              commandType: { DataType: 'String', StringValue: request.commandType },
+              replyToDomain: { DataType: 'String', StringValue: this._options.clientDomain },
+              replyToLane: { DataType: 'String', StringValue: this._options.clientLane }
           }
           break;
 
@@ -158,11 +162,11 @@ export default class SqsBrokerFacade {
     return new Promise((resolve, reject) => {
 
       this._listeners[String(uid)] = resolve;
-      
+
       setTimeout(() => {
           if (this._listeners[String(uid)]) reject(new Error('Response timeout'));
       }, timeout);
-        
+
     });
 
   }
