@@ -2,6 +2,10 @@ import AWS from 'aws-sdk';
 import Consumer from 'sqs-consumer';
 import Producer from 'sqs-producer';
 
+import ResponseStatus from './ResponseStatus';
+
+import bunyanLog from './utils/bunyanLog';
+
 export default class SqsBrokerFacade {
 
   constructor(options) {
@@ -56,14 +60,23 @@ export default class SqsBrokerFacade {
       acknowledge: done
     };
 
-    console.log('response message received');
+    let status = message.MessageAttributes.status;
+
+    bunyanLog.info('response message received');
 
     if(this._listeners[response.requestUid]) {
-        this._listeners[response.requestUid](response);
-        delete this._listeners[response.requestUid];
+        if( status != ResponseStatus.SUCCESS ){
+            delete this._listeners[response.requestUid];
+            done();
+            throw new Error(response.payload);
+        }
+        else{
+            this._listeners[response.requestUid](response);
+            delete this._listeners[response.requestUid];
+        }
     } else {
         done(new Error('No handler for the response'));
-        console.log(`Response for request uid ${response.requestUid} died silently`);
+        bunyanLog.info(`Response for request uid ${response.requestUid} died silently`);
     }
   }
 
@@ -81,7 +94,7 @@ export default class SqsBrokerFacade {
     });
 
     consumer.on('error', function (err) {
-      console.log(err.message);
+      bunyanLog.info(err.message);
     });
 
     return consumer;
