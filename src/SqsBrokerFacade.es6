@@ -65,7 +65,7 @@ export default class SqsBrokerFacade {
     bunyanLog.info('response message received');
 
     if(this._listeners[response.requestUid]) {
-        if( status != ResponseStatus.SUCCESS ){
+        if( status == ResponseStatus.INTERNAL_ERROR ){
             delete this._listeners[response.requestUid];
             done();
             throw new Error(response.payload);
