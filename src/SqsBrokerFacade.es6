@@ -60,24 +60,27 @@ export default class SqsBrokerFacade {
       acknowledge: done
     };
 
-    let status = message.MessageAttributes.status;
+    let status = message.MessageAttributes.status.StringValue;
 
     bunyanLog.info('response message received');
 
-    if(this._listeners[response.requestUid]) {
-        if( status == ResponseStatus.INTERNAL_ERROR ){
-            delete this._listeners[response.requestUid];
-            done();
-            throw new Error(response.payload);
-        }
-        else{
-            this._listeners[response.requestUid](response);
-            delete this._listeners[response.requestUid];
-        }
-    } else {
+    let listener = this._listeners[response.requestUid];
+    delete this._listeners[response.requestUid];
+
+    if(!listener) {
         done(new Error('No handler for the response'));
         bunyanLog.info(`Response for request uid ${response.requestUid} died silently`);
+        return;
     }
+
+    if( status == ResponseStatus.INTERNAL_ERROR ){
+        done();
+        let error = new Error(response.payload.message);
+        error.serviceStack = response.payload.stack;
+        throw error;
+    }
+
+    listener(response);
   }
 
 
