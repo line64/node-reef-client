@@ -74,14 +74,17 @@ export default class SqsBrokerFacade extends EventeEmitter {
         return;
     }
 
-    if( status == ResponseStatus.INTERNAL_ERROR ){
-        done();
-        let error = new Error(response.payload.message);
-        error.serviceStack = response.payload.stack;
-        throw error;
-    }
+    let promise = new Promise((resolve, reject) => {
+        if( status == ResponseStatus.INTERNAL_ERROR ){
+            done();
+            let error = new Error(response.payload.message);
+            error.serviceStack = response.payload.stack;
+            return reject(error);
+        }
+        return resolve(response);
+    });
 
-    listener(response);
+    listener(promise);
   }
 
 
