@@ -1,14 +1,15 @@
 import AWS from 'aws-sdk';
 import Consumer from 'sqs-consumer';
 import Producer from 'sqs-producer';
+import EventeEmitter from 'events';
 
 import ResponseStatus from './ResponseStatus';
 
-import bunyanLog from './utils/bunyanLog';
-
-export default class SqsBrokerFacade {
+export default class SqsBrokerFacade extends EventeEmitter {
 
   constructor(options) {
+
+    super();
 
     this._options = options;
 
@@ -62,14 +63,14 @@ export default class SqsBrokerFacade {
 
     let status = message.MessageAttributes.status.StringValue;
 
-    bunyanLog.info('response message received');
+    this.emit('info', 'response message received');
 
     let listener = this._listeners[response.requestUid];
     delete this._listeners[response.requestUid];
 
     if(!listener) {
         done(new Error('No handler for the response'));
-        bunyanLog.info(`Response for request uid ${response.requestUid} died silently`);
+        this.emit('info', `Response for request uid ${response.requestUid} died silently`);
         return;
     }
 

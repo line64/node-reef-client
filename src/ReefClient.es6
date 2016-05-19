@@ -1,14 +1,21 @@
 import uid from 'uid';
+import EventeEmitter from 'events';
 
-export default class ReefClient {
+export default class ReefClient extends EventeEmitter{
 
   constructor(brokerFacade) {
+
+    super();
 
     this._brokerFacade = brokerFacade;
 
   }
 
   setup() {
+
+    this._brokerFacade.on('info', (info) => this.emit('info', {Facade: info}) );
+
+    this._brokerFacade.on('error', (error) => this.emit('error', {Facade: error}) );
 
     return this._brokerFacade.setup();
 
