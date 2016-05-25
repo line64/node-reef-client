@@ -61,7 +61,13 @@ export default class SqsBrokerFacade extends EventeEmitter {
       acknowledge: done
     };
 
-    let status = message.MessageAttributes.status.StringValue;
+    let status = ResponseStatus.SUCCESS;
+    try{
+        status = message.MessageAttributes.status.StringValue;
+    }
+    catch(err){
+        this.emit('info', `OLD REEF VERSION`);
+    }
 
     this.emit('info', 'response message received');
 
