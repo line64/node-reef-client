@@ -72,13 +72,14 @@ export default class SqsBrokerFacade extends EventeEmitter {
     this.emit('info', 'response message received');
 
     let listener = this._listeners[response.requestUid];
-    delete this._listeners[response.requestUid];
 
     if(!listener) {
         done(new Error('No handler for the response'));
         this.emit('info', `Response for request uid ${response.requestUid} died silently`);
         return;
     }
+
+    delete this._listeners[response.requestUid];
 
     let promise = new Promise((resolve, reject) => {
         if( status == ResponseStatus.INTERNAL_ERROR ){
@@ -107,7 +108,7 @@ export default class SqsBrokerFacade extends EventeEmitter {
     });
 
     consumer.on('error', function (err) {
-      bunyanLog.info(err.message);
+      this.emit('info', err.message);
     });
 
     return consumer;
@@ -190,7 +191,10 @@ export default class SqsBrokerFacade extends EventeEmitter {
       this._listeners[String(uid)] = resolve;
 
       setTimeout(() => {
-          if (this._listeners[String(uid)]) reject(new Error('Response timeout'));
+          if (this._listeners[String(uid)]){
+            delete this._listeners[String(uid)];
+            reject(new Error('Response timeout'));
+          }
       }, timeout);
 
     });
