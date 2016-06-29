@@ -108,7 +108,7 @@ export default class SqsBrokerFacade extends EventeEmitter {
     });
 
     consumer.on('error', function (err) {
-      this.emit('info', err.message);
+      this.emit('error', err.message);
     });
 
     return consumer;
