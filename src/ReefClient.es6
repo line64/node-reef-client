@@ -1,6 +1,8 @@
 import uid from 'uid';
 import EventeEmitter from 'events';
 
+import ReceiptType from './ReceiptType';
+
 export default class ReefClient extends EventeEmitter{
 
   constructor(brokerFacade) {
@@ -68,7 +70,8 @@ export default class ReefClient extends EventeEmitter{
       lane: lane,
       commandType: type,
       payload: params,
-      uid: requestUid
+      uid: requestUid,
+      receiptType: ReceiptType.EXPECT_RECEIPT
     };
 
     let responsePromise = this._brokerFacade.expectResponse(requestUid, 30*1000);
@@ -81,6 +84,25 @@ export default class ReefClient extends EventeEmitter{
 
     return response.payload;
 
+  }
+
+  async fireAndForget(domain, lane, type, params) {
+
+    let requestUid = uid();
+
+    let request = {
+      reefDialect: 'reef-v1-command',
+      domain: domain,
+      lane: lane,
+      commandType: type,
+      payload: params,
+      uid: requestUid,
+      receiptType: ReceiptType.FIRE_AND_FORGET
+    };
+
+    await this._brokerFacade.enqueueRequest(request);
+
+    return;
   }
 
   listen(event, callback) {

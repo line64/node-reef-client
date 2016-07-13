@@ -21,6 +21,8 @@ export default class SqsBrokerFacade extends EventeEmitter {
 
     this._listeners = {};
 
+    this._producers = {};
+
   }
 
   _ensureQueue(name) {
@@ -42,11 +44,21 @@ export default class SqsBrokerFacade extends EventeEmitter {
 
   async _setupRequestProducer(domain, lane) {
 
-    let queueUrl = await this._ensureQueue(`${domain}-${lane}-req`);
+    let queueName = `${domain}-${lane}-req`;
+
+    if( this._producers[queueName] ){
+        return this._producers[queueName];
+    }
+
+    let queueUrl = await this._ensureQueue(queueName);
 
     let producer = Producer.create({
       sqs: this._sqs,
       queueUrl: queueUrl
+    });
+
+    producer.on('error', function (err) {
+      this.emit('error', err.message);
     });
 
     return producer;
@@ -163,7 +175,7 @@ export default class SqsBrokerFacade extends EventeEmitter {
               requestUid: { DataType: 'String', StringValue: request.uid },
               queryType: { DataType: 'String', StringValue: request.queryType },
               replyToDomain: { DataType: 'String', StringValue: this._options.clientDomain },
-              replyToLane: { DataType: 'String', StringValue: this._options.clientLane }
+              replyToLane: { DataType: 'String', StringValue: this._options.clientLane },
           }
           break;
 
@@ -173,7 +185,8 @@ export default class SqsBrokerFacade extends EventeEmitter {
               requestUid: { DataType: 'String', StringValue: request.uid },
               commandType: { DataType: 'String', StringValue: request.commandType },
               replyToDomain: { DataType: 'String', StringValue: this._options.clientDomain },
-              replyToLane: { DataType: 'String', StringValue: this._options.clientLane }
+              replyToLane: { DataType: 'String', StringValue: this._options.clientLane },
+              receiptType: { DataType: 'String', StringValue: this._options.receiptType }
           }
           break;
 
