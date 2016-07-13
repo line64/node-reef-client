@@ -100,9 +100,7 @@ export default class ReefClient extends EventeEmitter{
       receiptType: ReceiptType.FIRE_AND_FORGET
     };
 
-    await this._brokerFacade.enqueueRequest(request);
-
-    return;
+    return this._brokerFacade.enqueueRequest(request);
   }
 
   listen(event, callback) {

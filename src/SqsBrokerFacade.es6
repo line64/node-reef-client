@@ -47,21 +47,21 @@ export default class SqsBrokerFacade extends EventeEmitter {
     let queueName = `${domain}-${lane}-req`;
 
     if( this._producers[queueName] ){
-        return this._producers[queueName];
+        return Promise.resolve(this._producers[queueName]);
     }
 
-    let queueUrl = await this._ensureQueue(queueName);
+    this._producers[queueName] = new Promise( async (resolve, reject) => {
 
-    let producer = Producer.create({
-      sqs: this._sqs,
-      queueUrl: queueUrl
+        let queueUrl = await this._ensureQueue(queueName);
+
+        let producer = Producer.create({
+          sqs: this._sqs,
+          queueUrl: queueUrl
+        });
+
+        resolve(producer);
+
     });
-
-    producer.on('error', function (err) {
-      this.emit('error', err.message);
-    });
-
-    return producer;
 
   }
 
@@ -120,7 +120,7 @@ export default class SqsBrokerFacade extends EventeEmitter {
     });
 
     consumer.on('error', function (err) {
-      this.emit('error', err.message);
+      this.emit('error', err ? err.message : "UNKNOWN_ERROR");
     });
 
     return consumer;
@@ -186,7 +186,7 @@ export default class SqsBrokerFacade extends EventeEmitter {
               commandType: { DataType: 'String', StringValue: request.commandType },
               replyToDomain: { DataType: 'String', StringValue: this._options.clientDomain },
               replyToLane: { DataType: 'String', StringValue: this._options.clientLane },
-              receiptType: { DataType: 'String', StringValue: this._options.receiptType }
+              receiptType: { DataType: 'String', StringValue: request.receiptType }
           }
           break;
 
