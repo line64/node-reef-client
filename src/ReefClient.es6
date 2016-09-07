@@ -10,14 +10,18 @@ export default class ReefClient extends EventeEmitter{
     super();
 
     this._brokerFacade = brokerFacade;
+    
+    this.timeout = 30*1000;
 
   }
 
-  setup() {
+  setup(options) {
 
     this._brokerFacade.on('info', (info) => this.emit('info', {Facade: info}) );
 
     this._brokerFacade.on('error', (error) => this.emit('error', {Facade: error}) );
+    
+    this.timeout = (options && options.timeout) ? options.timeout : this.timeout;
 
     return this._brokerFacade.setup();
 
@@ -35,10 +39,10 @@ export default class ReefClient extends EventeEmitter{
 
   }
 
-  async query(domain, lane, type, params) {
+  async query(domain, lane, type, params, options) {
 
     let requestUid = uid();
-
+    
     let request = {
       reefDialect: 'reef-v1-query',
       domain: domain,
@@ -48,7 +52,9 @@ export default class ReefClient extends EventeEmitter{
       uid: requestUid
     };
 
-    let responsePromise = this._brokerFacade.expectResponse(requestUid, 30*1000);
+    let timeout = (options && options.timeout) ? options.timeout : this.timeout;
+    
+    let responsePromise = this._brokerFacade.expectResponse(requestUid, timeout);
 
     await this._brokerFacade.enqueueRequest(request);
 
@@ -60,10 +66,10 @@ export default class ReefClient extends EventeEmitter{
 
   }
 
-  async execute(domain, lane, type, params) {
+  async execute(domain, lane, type, params, options) {
 
     let requestUid = uid();
-
+    
     let request = {
       reefDialect: 'reef-v1-command',
       domain: domain,
@@ -73,8 +79,10 @@ export default class ReefClient extends EventeEmitter{
       uid: requestUid,
       receiptType: ReceiptType.EXPECT_RECEIPT
     };
+    
+    let timeout = (options && options.timeout) ? options.timeout : this.timeout;
 
-    let responsePromise = this._brokerFacade.expectResponse(requestUid, 30*1000);
+    let responsePromise = this._brokerFacade.expectResponse(requestUid, timeout);
 
     await this._brokerFacade.enqueueRequest(request);
 
@@ -86,7 +94,7 @@ export default class ReefClient extends EventeEmitter{
 
   }
 
-  async fireAndForget(domain, lane, type, params) {
+  async fireAndForget(domain, lane, type, params, options) {
 
     let requestUid = uid();
 
